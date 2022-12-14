@@ -62,6 +62,12 @@ void Error_Handler(void);
 #define PERIPWM 1050
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
+#define ENB_Pin GPIO_PIN_1
+#define ENB_GPIO_Port GPIOC
+#define IN1B_Pin GPIO_PIN_0
+#define IN1B_GPIO_Port GPIOA
+#define IN2B_Pin GPIO_PIN_1
+#define IN2B_GPIO_Port GPIOA
 #define USART_TX_Pin GPIO_PIN_2
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
@@ -74,6 +80,8 @@ void Error_Handler(void);
 #define Hall2A_GPIO_Port GPIOC
 #define Hall3A_Pin GPIO_PIN_5
 #define Hall3A_GPIO_Port GPIOC
+#define ENA_Pin GPIO_PIN_10
+#define ENA_GPIO_Port GPIOA
 #define Enable_Pin GPIO_PIN_11
 #define Enable_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
@@ -86,6 +94,10 @@ void Error_Handler(void);
 #define EN2_GPIO_Port GPIOC
 #define EN3_Pin GPIO_PIN_12
 #define EN3_GPIO_Port GPIOC
+#define IN1A_Pin GPIO_PIN_4
+#define IN1A_GPIO_Port GPIOB
+#define IN2A_Pin GPIO_PIN_5
+#define IN2A_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

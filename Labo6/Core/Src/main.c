@@ -67,7 +67,11 @@ static void MX_TIM4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+uint16_t results[1];
+uint8_t single_phase_EN[4] = {0};
+uint8_t single_phase_IN[4] = {0};
+uint8_t double_phase_EN[4] = {0};
+uint8_t double_phase_IN[4] = {0};
 /* USER CODE END 0 */
 
 /**
@@ -105,7 +109,18 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*) results, 1);
 
+  single_phase_EN[0] = 0b10;
+  single_phase_EN[1] = 0b01;
+  single_phase_EN[2] = 0b10;
+  single_phase_EN[3] = 0b01;
+  single_phase_IN[0] = 0b1000;
+  single_phase_IN[1] = 0b0010;
+  single_phase_IN[2] = 0b0100;
+  single_phase_IN[3] = 0b0001;
+//  double_phase_EN = [1];
+//  double_phase_IN = [2];
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -306,10 +321,6 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
@@ -342,7 +353,6 @@ static void MX_TIM3_Init(void)
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
 
   /* USER CODE BEGIN TIM3_Init 1 */
 
@@ -362,28 +372,15 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
-  {
-    Error_Handler();
-  }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_ENABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
-  HAL_TIM_MspPostInit(&htim3);
 
 }
 
@@ -517,10 +514,14 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LD2_Pin|Enable_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, ENB_Pin|EN1_Pin|EN2_Pin|EN3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, EN1_Pin|EN2_Pin|EN3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, IN1B_Pin|IN2B_Pin|LD2_Pin|ENA_Pin
+                          |Enable_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, IN1A_Pin|IN2A_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -528,8 +529,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD2_Pin Enable_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin|Enable_Pin;
+  /*Configure GPIO pins : ENB_Pin EN1_Pin EN2_Pin EN3_Pin */
+  GPIO_InitStruct.Pin = ENB_Pin|EN1_Pin|EN2_Pin|EN3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : IN1B_Pin IN2B_Pin LD2_Pin ENA_Pin
+                           Enable_Pin */
+  GPIO_InitStruct.Pin = IN1B_Pin|IN2B_Pin|LD2_Pin|ENA_Pin
+                          |Enable_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -547,17 +557,42 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : EN1_Pin EN2_Pin EN3_Pin */
-  GPIO_InitStruct.Pin = EN1_Pin|EN2_Pin|EN3_Pin;
+  /*Configure GPIO pins : IN1A_Pin IN2A_Pin */
+  GPIO_InitStruct.Pin = IN1A_Pin|IN2A_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle){
+	static uint16_t cnt = 0;
+	static uint8_t tab_cnt = 0;
+	static int pos = 0;
+	static const int consigne = 100;
+	if (cnt > 50) {
+	  HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, (single_phase_EN[tab_cnt % 4] >> 1) && 0x01);
+	  HAL_GPIO_WritePin(EN2_GPIO_Port, EN2_Pin, single_phase_EN[tab_cnt % 4] && 0x01);
+	  HAL_GPIO_WritePin(IN1A_GPIO_Port, IN1A_Pin, (single_phase_IN[tab_cnt % 4] >> 3) && 0x01);
+	  HAL_GPIO_WritePin(IN2A_GPIO_Port, IN2A_Pin, (single_phase_IN[tab_cnt % 4] >> 2) && 0x01);
+	  HAL_GPIO_WritePin(IN1B_GPIO_Port, IN1B_Pin, (single_phase_IN[tab_cnt % 4] >> 1) && 0x01);
+	  HAL_GPIO_WritePin(IN2B_GPIO_Port, IN2B_Pin, single_phase_IN[tab_cnt % 4] && 0x01);
+	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
+	  if (pos < consigne ){
+		  ++tab_cnt;
+	  	  ++pos;
+	  } else if (pos > consigne ){
+		  --tab_cnt;
+	  	  --pos;
+	  }
+	  cnt = 0;
+	} else {
+		cnt++;
+	}
+}
 /* USER CODE END 4 */
 
 /**
